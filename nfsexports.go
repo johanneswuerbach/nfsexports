@@ -81,6 +81,31 @@ func Remove(exportsFile string, identifier string) ([]byte, error) {
 	return newExports, nil
 }
 
+// Exists checks the existence of a given export
+// The export must, however, have been created by this library using Add
+func Exists(exportsFile string, identifier string) (bool, error) {
+	if exportsFile == "" {
+		exportsFile = defaultExportsFile
+	}
+
+	exports, err := ioutil.ReadFile(exportsFile)
+	if err != nil {
+		return false, err
+	}
+
+	beginMark := []byte(fmt.Sprintf("# BEGIN: %s", identifier))
+	endMark := []byte(fmt.Sprintf("# END: %s\n", identifier))
+
+	begin := bytes.Index(exports, beginMark)
+	end := bytes.Index(exports, endMark)
+
+	if begin == -1 || end == -1 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // ReloadDaemon reload NFS daemon
 func ReloadDaemon() error {
 	cmd := exec.Command("sudo", "nfsd", "update")
