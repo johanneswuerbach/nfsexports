@@ -1,7 +1,5 @@
 os: osx
 language: go
-go:
-  - 1.5.1
 
 before_script:
   - sudo nfsd status
