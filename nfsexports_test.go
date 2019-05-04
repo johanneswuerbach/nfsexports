@@ -68,6 +68,42 @@ func TestAddWithInvalid(t *testing.T) {
 	}
 }
 
+func TestCheckExistsWithValid(t *testing.T) {
+	exportsFile, err := exportsFile(`/Users 192.168.64.1 -alldirs -maproot=root
+# BEGIN: my-id
+/Users 192.168.64.2 -alldirs -maproot=root
+# END: my-id
+`)
+	if err != nil {
+		t.Error("Failed creating test exports file", err)
+	}
+
+	result, err := Exists(exportsFile, "my-id")
+	if err != nil {
+		t.Error("Checking existence of valid exports fails", err)
+	} else if result == false {
+		t.Error("Checking existence of valid exports returned false", result)
+	}
+}
+
+func TestCheckExistsWithInvalid(t *testing.T) {
+	exportsFile, err := exportsFile(`/Users 192.168.64.1 -alldirs -maproot=root
+# BEGIN: my-id
+/Users 192.168.64.2 -alldirs -maproot=root
+# END: my-id
+`)
+	if err != nil {
+		t.Error("Failed creating test exports file", err)
+	}
+
+	result, err := Exists(exportsFile, "my-invalid-id")
+	if err != nil {
+		t.Error("Checking existence of invalid exports fails", err)
+	} else if result == true {
+		t.Error("Checking existence of invalid exports returned true", result)
+	}
+}
+
 func TestAddNewFile(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "nfsexports")
 	if err != nil {
