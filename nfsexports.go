@@ -1,11 +1,13 @@
 package nfsexports
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 const (
@@ -104,6 +106,74 @@ func Exists(exportsFile string, identifier string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// List returns the list of exports *created by* nfsexports
+// This means other exports might be present in the file but won't
+// be returned by this function
+func List(exportsFile string) (map[string]string, error) {
+	if exportsFile == "" {
+		exportsFile = defaultExportsFile
+	}
+
+	f, err := os.Open(exportsFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	exports := map[string]string{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Index(line, "# BEGIN:") != -1 {
+			if scanner.Scan() != false {
+				id := strings.TrimLeft(line, "# BEGIN:")
+				export := scanner.Text()
+				exports[id] = export
+			}
+		}
+	}
+
+	if scanner.Err() != nil {
+		return nil, err
+	}
+
+	return exports, nil
+}
+
+// ListAll returns all nfsexports present in the exports file.
+// ListAll does not check the validity of the exports;
+// It simply returns any line present in the file that is not a comment
+func ListAll(exportsFile string) ([]string, error) {
+	if exportsFile == "" {
+		exportsFile = defaultExportsFile
+	}
+
+	f, err := os.Open(exportsFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	exports := []string{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Index(line, "#") != -1 || len(line) == 0 {
+			continue
+		}
+		export := scanner.Text()
+		exports = append(exports, export)
+	}
+
+	if scanner.Err() != nil {
+		return nil, err
+	}
+
+	return exports, nil
 }
 
 // ReloadDaemon reload NFS daemon
