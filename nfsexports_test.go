@@ -104,6 +104,74 @@ func TestCheckExistsWithInvalid(t *testing.T) {
 	}
 }
 
+func TestList(t *testing.T) {
+
+	expected := map[string]string{
+		"my-id":  "/Users 192.168.64.2 -alldirs -maproot=root",
+		"my-id1": "/Users 192.168.64.3 -alldirs -maproot=root",
+		"my-id2": "/Users 192.168.64.4 -alldirs -maproot=root",
+	}
+
+	contents := "/Users 192.168.64.1 -alldirs -maproot=root"
+	for id, export := range expected {
+		contents = fmt.Sprintf("%s\n# BEGIN: %s\n%s\n# END: %s", contents, id, export, id)
+	}
+	contents += "/Users 192.168.64.6 -alldirs -maproot=root"
+
+	exportsFile, err := exportsFile(contents)
+	if err != nil {
+		t.Error("Failed creating test exports file", err)
+	}
+
+	exports, err := List(exportsFile)
+
+	for id, export := range exports {
+		if expected[id] != export {
+			t.Error("nfsexport id", id, "not matching", export)
+		}
+	}
+}
+
+func TestListAll(t *testing.T) {
+	exportsFile, err := exportsFile(`/Users 192.168.64.1 -alldirs -maproot=root
+# BEGIN: my-id
+/Users 192.168.64.2 -alldirs -maproot=root
+# END: my-id
+# BEGIN: my-id1
+/Users 192.168.64.3 -alldirs -maproot=root
+# END: my-id1
+# BEGIN: my-id2
+/Users 192.168.64.4 -alldirs -maproot=root
+# END: my-id2
+
+/Users 192.168.64.5 -alldirs -maproot=root
+`)
+	if err != nil {
+		t.Error("Failed creating test exports file", err)
+	}
+
+	expected := map[string]bool{
+		"/Users 192.168.64.1 -alldirs -maproot=root": true,
+		"/Users 192.168.64.2 -alldirs -maproot=root": true,
+		"/Users 192.168.64.3 -alldirs -maproot=root": true,
+		"/Users 192.168.64.4 -alldirs -maproot=root": true,
+		"/Users 192.168.64.5 -alldirs -maproot=root": true,
+	}
+
+	exports, err := ListAll(exportsFile)
+
+	if len(exports) < len(expected) {
+		t.Error("Missing NFS export")
+	}
+
+	for _, export := range exports {
+		if _, ok := expected[export]; !ok {
+			t.Error("Too many NFS exports returned (", export, ")")
+		}
+	}
+
+}
+
 func TestAddNewFile(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "nfsexports")
 	if err != nil {
