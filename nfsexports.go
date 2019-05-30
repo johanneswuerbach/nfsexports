@@ -136,7 +136,7 @@ func List(exportsFile string) (map[string]string, error) {
 		}
 	}
 
-	if scanner.Err() != nil {
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
@@ -169,7 +169,7 @@ func ListAll(exportsFile string) ([]string, error) {
 		exports = append(exports, export)
 	}
 
-	if scanner.Err() != nil {
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
