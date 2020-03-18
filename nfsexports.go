@@ -182,7 +182,7 @@ func ReloadDaemon() error {
 	cmd.Stderr = &bytes.Buffer{}
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("Reloading nfds failed: %s\n%s", err.Error(), cmd.Stderr)
+		return fmt.Errorf("Reloading nfsd failed: %s\n%s", err.Error(), cmd.Stderr)
 	}
 
 	return nil
