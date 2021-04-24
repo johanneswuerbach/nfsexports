@@ -178,7 +178,7 @@ func ListAll(exportsFile string) ([]string, error) {
 
 // ReloadDaemon reload NFS daemon
 func ReloadDaemon() error {
-	cmd := exec.Command("sudo", "/sbin/nfsd", "update")
+	cmd := exec.Command("sudo", "/sbin/nfsd", "restart")
 	cmd.Stderr = &bytes.Buffer{}
 
 	if err := cmd.Run(); err != nil {
